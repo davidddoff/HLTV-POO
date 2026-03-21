@@ -3,6 +3,26 @@
 #include <string.h>
 using namespace std;
 
+
+class Event {
+    private:
+        char* name;
+        int requiredPoints;
+    public:
+        Event(const char* , int );
+        ~Event(){ delete[] name; }
+
+        int getRequiredPoints() const { return requiredPoints; }
+        const char* getName() const { return name; }
+};
+
+
+Event::Event(const char* name, int requiredPoints){
+            this->name = new char[strlen(name) + 1];
+            strcpy(this->name, name);
+            this->requiredPoints = requiredPoints;
+}
+
 class Player {
     private:
         char* name;
@@ -100,6 +120,7 @@ void Player::setRating(float r) {
 
 class Team {
     private:
+        char* name;
         Player* Player1;
         Player* Player2;
         Player* Player3;
@@ -107,11 +128,18 @@ class Team {
         Player* Player5;
         int points;
         bool calif;
-        bool TeamCalif(int p);
+        bool checkQualification(const Event& e) {
+            if (this->points >= e.getRequiredPoints()) {
+                this->calif = true;
+            } else {
+                this->calif = false;
+            }
+            return this->calif;
+        }
 
     public:
         Team();
-        Team(Player*, Player*, Player*, Player*, Player*, int);
+        Team(char*, Player*, Player*, Player*, Player*, Player*, int);
         Team(const Team &obj);
         Team& operator=(const Team& obj);
         int getPoints() const;
@@ -124,19 +152,16 @@ class Team {
         Player* getP5() const;
 };
 
-bool Team::TeamCalif(int p) {
-    if (p >= 300)
-        return true;
-    return false;
-}
-
 Team::Team() {
+    name= new char[4];
+    strcpy(name, "N/A")
     Player1 = Player2 = Player3 = Player4 = Player5 = NULL;
     points = 0;
     calif = false;
 }
 
-Team::Team(Player* P1, Player* P2, Player* P3, Player* P4, Player* P5, int pts) {
+Team::Team(char* name, Player* P1, Player* P2, Player* P3, Player* P4, Player* P5, int pts) {
+    this->name=name;
     this->Player1 = P1;
     this->Player2 = P2;
     this->Player3 = P3;
@@ -146,6 +171,7 @@ Team::Team(Player* P1, Player* P2, Player* P3, Player* P4, Player* P5, int pts) 
 }
 
 Team::Team(const Team &obj) {
+    this->name= obj.name;
     this->Player1 = obj.Player1;
     this->Player2 = obj.Player2;
     this->Player3 = obj.Player3;
@@ -158,6 +184,7 @@ Team::Team(const Team &obj) {
 Team& Team::operator=(const Team& obj) {
     if (this == &obj)
         return *this;
+    this->name= obj.name;
     this->Player1 = obj.Player1;
     this->Player2 = obj.Player2;
     this->Player3 = obj.Player3;
@@ -174,7 +201,7 @@ int Team::getPoints() const {
 
 void Team::setPoints(int p) {
     points = p;
-    calif = TeamCalif(points);
+    calif = checkQualification(points);
 }
 
 bool Team::getCalif() const {
@@ -201,36 +228,46 @@ class Match {
 
     public:
         Match();
-        Match(Team*, Team*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*,);
+        Match( Team*, Team*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*,);
         Match(const Match &obj);
         ~Match();
         Match& operator=(const Match& obj);
 };
 
 Match::Match() {
-    Team1 = Team2 = NULL;
+    teamName = Team1 = Team2 = NULL;
     results = kd1 = kd2 = kd3 = kd4 = kd5 = kd6 = kd7 = kd8 = kd9 = kd10 = NULL;
 }
 
-Match::Match(Team* Team1, Team* Team2, const char* res, 
-             const char* kd1, const char* kd2, const char* kd3, const char* kd4, const char* kd5,
-             const char* kd6, const char* kd7, const char* kd8, const char* kd9, const char* kd10) {
+Match::Match(Team* Team1, Team* Team2, const char* res, const char* kd1, const char* kd2, const char* kd3, const char* kd4, const char* kd5, const char* kd6, const char* kd7, const char* kd8, const char* kd9, const char* kd10) {
     
     this->Team1 = Team1;
     this->Team2 = Team2;
-    results = new char[strlen(res) + 1]; strcpy(results, res);
-    kd1 = new char[strlen(k1) + 1]; strcpy(kd1, k1);
-    kd2 = new char[strlen(k2) + 1]; strcpy(kd2, k2);
-    kd3 = new char[strlen(k3) + 1]; strcpy(kd3, k3);
-    kd4 = new char[strlen(k4) + 1]; strcpy(kd4, k4);
-    kd5 = new char[strlen(k5) + 1]; strcpy(kd5, k5);
-    kd6 = new char[strlen(k6) + 1]; strcpy(kd6, k6);
-    kd7 = new char[strlen(k7) + 1]; strcpy(kd7, k7);
-    kd8 = new char[strlen(k8) + 1]; strcpy(kd8, k8);
-    kd9 = new char[strlen(k9) + 1]; strcpy(kd9, k9);
-    kd10 = new char[strlen(k10) + 1]; strcpy(kd10, k10);
+    this->results = new char[strlen(res) + 1]; 
+    strcpy(this->results, res);
+    this->kd1 = new char[strlen(kd1) + 1]; 
+    strcpy(this->kd1, kd1);
+    this->kd2 = new char[strlen(kd2) + 1]; 
+    strcpy(this->kd2, kd2);
+    this->kd3 = new char[strlen(kd3) + 1]; 
+    strcpy(this->kd3, kd3);
+    this->kd4 = new char[strlen(kd4) + 1]; 
+    strcpy(this->kd4, kd4);
+    this->kd5 = new char[strlen(kd5) + 1]; 
+    strcpy(this->kd5, kd5);
+    this->kd6 = new char[strlen(kd6) + 1]; 
+    strcpy(this->kd6, kd6);
+    this->kd7 = new char[strlen(kd7) + 1]; 
+    strcpy(this->kd7, kd7);
+    this->kd8 = new char[strlen(kd8) + 1]; 
+    strcpy(this->kd8, kd8);
+    this->kd9 = new char[strlen(kd9) + 1]; 
+    strcpy(this->kd9, kd9);
+    this->kd10 = new char[strlen(kd10) + 1]; 
+    strcpy(this->kd10, kd10);
     this->PointsMatch();
 }
+
 
 Match::~Match() {
     delete[] results;
@@ -279,5 +316,6 @@ void Match::updatePlayerRating(Player* p, char* KDD) {
 Match::Match(const Match &obj) {
     this->Team1 = obj.Team1;
     this->Team2 = obj.Team2;
-    this->results = new char[strlen(obj.results) + 1]; strcpy(this->results, obj.results);
+    this->results = new char[strlen(obj.results) + 1];
+    strcpy(this->results, obj.results);
 }
