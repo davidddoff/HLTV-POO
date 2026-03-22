@@ -43,7 +43,7 @@ class Player {
         int getAge() const;
         float getRating() const;
         double getNoMatches() const;
-        int getTotalPlayers() const;
+        static int getTotalPlayers();
 
         void setName(const char* n);
         void setAge(int a);
@@ -89,6 +89,7 @@ Player& Player::operator=(const Player& obj) {
     strcpy(this->name, obj.name);
     this->age = obj.age;
     this->rating = obj.rating;
+    return *this;
 }
 
 char* Player::getName() const {
@@ -123,7 +124,7 @@ void Player::setRating(float r) {
     rating = r;
 }
 
-int Player::getTotalPlayers() const{
+int Player::getTotalPlayers(){
     return totalPlayers;
 }
 
@@ -142,6 +143,7 @@ class Team {
 
     public:
         Team();
+        ~Team();
         Team(char*, Player*, Player*, Player*, Player*, Player*, int);
         Team(const Team &obj);
         Team& operator=(const Team& obj);
@@ -168,6 +170,12 @@ char* Team::getNameTeam() const {
     return name;
 }
 
+Team::~Team() {
+    if (name != NULL) {
+        delete[] name;
+    }
+}
+
 Team::Team() {
     name= new char[4];
     strcpy(name, "N/A");
@@ -188,7 +196,8 @@ Team::Team(char* name, Player* P1, Player* P2, Player* P3, Player* P4, Player* P
 }
 
 Team::Team(const Team &obj) {
-    this->name= obj.name;
+    this->name =new char[strlen(name)+1];
+    strcpy(this->name, name);
     this->Player1 = obj.Player1;
     this->Player2 = obj.Player2;
     this->Player3 = obj.Player3;
@@ -508,7 +517,7 @@ void Menu::showPlayerStats() {
         cout << "Nu exista jucatori inregistrati.\n";
         return;
     } 
-    cout << "\n[INFO] Total jucatori inregistrati in baza de date: " << Player::getTotalPlayers() const << endl;
+    cout << "\n[INFO] Total jucatori inregistrati in baza de date: " << Player::getTotalPlayers()<< endl;
     Player* toti_jucatorii[500];
     int total_jucatori = 0;
     for (int i = 0; i < teamCount; i++) {
@@ -552,4 +561,10 @@ Menu::~Menu() {
             delete teams[i];
         }
     }
+}
+
+int main() {
+    Menu hltvApp;
+    hltvApp.run();
+    return 0;
 }
