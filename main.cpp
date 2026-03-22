@@ -30,25 +30,28 @@ class Player {
         int age;
         float rating;
         double noMatches;
-        static int totalPlayers=0;
+        static int totalPlayers;
 
     public:
         Player();
         Player(const char*, int, float, double);
         Player(const Player &obj);
         ~Player();
-        static int getTotalPlayers() { return totalPlayers; }
         Player& operator=(const Player& obj);
 
         char* getName() const;
         int getAge() const;
         float getRating() const;
         double getNoMatches() const;
+        int getTotalPlayers() const;
 
         void setName(const char* n);
         void setAge(int a);
         void setRating(float r);
 };
+
+int Player::totalPlayers=0;
+
 
 Player::Player() : noMatches(0) {
     name = new char[4];
@@ -120,6 +123,10 @@ void Player::setRating(float r) {
     rating = r;
 }
 
+int Player::getTotalPlayers() const{
+    return totalPlayers;
+}
+
 
 
 class Team {
@@ -146,6 +153,7 @@ class Team {
         Player* getP3() const;
         Player* getP4() const;
         Player* getP5() const;
+        char* getNameTeam() const;
         bool checkQualification(const Event& e) {
             if (this->points >= e.getRequiredPoints()) {
                 this->calif = true;
@@ -155,6 +163,10 @@ class Team {
             return this->calif;
         }
 };
+
+char* Team::getNameTeam() const {
+    return name;
+}
 
 Team::Team() {
     name= new char[4];
@@ -232,14 +244,14 @@ class Match {
 
     public:
         Match();
-        Match( Team*, Team*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*,);
+        Match( Team*, Team*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*, const char*);
         Match(const Match &obj);
         ~Match();
         Match& operator=(const Match& obj);
 };
 
 Match::Match() {
-    teamName = Team1 = Team2 = NULL;
+    Team1 = Team2 = NULL;
     results = kd1 = kd2 = kd3 = kd4 = kd5 = kd6 = kd7 = kd8 = kd9 = kd10 = NULL;
 }
 
@@ -429,7 +441,7 @@ void Menu::registerMatch() {
         return;
     }
     for (int i = 0; i < teamCount; i++) {
-        cout << i << ". " << teams[i]->getName() << endl;
+        cout << i << ". " << teams[i]->getNameTeam() << endl;
     }
     int idx1, idx2;
     cout << "Alegeti indexul primei echipe: "; cin >> idx1;
@@ -461,7 +473,7 @@ void Menu::showAllData() {
     }
 
     for (int i = 0; i < teamCount; i++) {
-        cout << "\nECHIPA: " << teams[i]->getName() << " | Puncte: " << teams[i]->getPoints();
+        cout << "\nECHIPA: " << teams[i]->getNameTeam() << " | Puncte: " << teams[i]->getPoints();
         cout << " | Calificat: " << (teams[i]->getCalif() ? "DA" : "NU") << endl;
         Player* pTemp[5] = { teams[i]->getP1(), teams[i]->getP2(), teams[i]->getP3(), teams[i]->getP4(), teams[i]->getP5() };
         for (int j = 0; j < 5; j++) {
@@ -484,7 +496,7 @@ void Menu::manageEvent() {
     bool found = false;
     for (int i = 0; i < teamCount; i++) {
         if (teams[i]->checkQualification(currentEvent)) {
-            cout << "- " << teams[i]->getName() << " (" << teams[i]->getPoints() << " puncte)\n";
+            cout << "- " << teams[i]->getNameTeam() << " (" << teams[i]->getPoints() << " puncte)\n";
             found = true;
         }
     }
@@ -496,7 +508,7 @@ void Menu::showPlayerStats() {
         cout << "Nu exista jucatori inregistrati.\n";
         return;
     } 
-    cout << "\n[INFO] Total jucatori inregistrati in baza de date: " << Player::getTotalPlayers() << endl;
+    cout << "\n[INFO] Total jucatori inregistrati in baza de date: " << Player::getTotalPlayers() const << endl;
     Player* toti_jucatorii[500];
     int total_jucatori = 0;
     for (int i = 0; i < teamCount; i++) {
