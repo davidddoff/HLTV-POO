@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <stdio.h>
 #include <string.h>
 using namespace std;
@@ -28,14 +29,15 @@ class Player {
         char* name;
         int age;
         float rating;
-        const double noMatches;
+        double noMatches;
+        static int totalPlayers=0;
 
     public:
         Player();
         Player(const char*, int, float, double);
         Player(const Player &obj);
         ~Player();
-
+        static int getTotalPlayers() { return totalPlayers; }
         Player& operator=(const Player& obj);
 
         char* getName() const;
@@ -53,6 +55,7 @@ Player::Player() : noMatches(0) {
     strcpy(name, "N/A");
     age = 0;
     rating = 0.0;
+    totalPlayers++;
 }
 
 Player::Player(const char* name, int age, float rating, double noMatches) : noMatches(noMatches) {
@@ -60,6 +63,7 @@ Player::Player(const char* name, int age, float rating, double noMatches) : noMa
     this->rating = rating;
     this->name = new char[strlen(name) + 1];
     strcpy(this->name, name);
+    totalPlayers++;
 }
 
 Player::Player(const Player &obj) : noMatches(obj.noMatches) {
@@ -128,14 +132,6 @@ class Team {
         Player* Player5;
         int points;
         bool calif;
-        bool checkQualification(const Event& e) {
-            if (this->points >= e.getRequiredPoints()) {
-                this->calif = true;
-            } else {
-                this->calif = false;
-            }
-            return this->calif;
-        }
 
     public:
         Team();
@@ -150,18 +146,27 @@ class Team {
         Player* getP3() const;
         Player* getP4() const;
         Player* getP5() const;
+        bool checkQualification(const Event& e) {
+            if (this->points >= e.getRequiredPoints()) {
+                this->calif = true;
+            } else {
+                this->calif = false;
+            }
+            return this->calif;
+        }
 };
 
 Team::Team() {
     name= new char[4];
-    strcpy(name, "N/A")
+    strcpy(name, "N/A");
     Player1 = Player2 = Player3 = Player4 = Player5 = NULL;
     points = 0;
     calif = false;
 }
 
 Team::Team(char* name, Player* P1, Player* P2, Player* P3, Player* P4, Player* P5, int pts) {
-    this->name=name;
+    this->name = new char[strlen(name) + 1];
+    strcpy(this->name, name);
     this->Player1 = P1;
     this->Player2 = P2;
     this->Player3 = P3;
@@ -201,7 +206,6 @@ int Team::getPoints() const {
 
 void Team::setPoints(int p) {
     points = p;
-    calif = checkQualification(points);
 }
 
 bool Team::getCalif() const {
@@ -302,9 +306,9 @@ void Match::PointsMatch() {
 }
 
 void Match::updatePlayerRating(Player* p, char* KDD) {
-    if (!p || !kdString) return;
+    if (!p || !KDD) return;
     int k, d;
-    sscanf(KDD, "%d %d", &k, &d);
+    sscanf(KDD, "%d/%d", &k, &d);
     if (d == 0) d = 1;
     float matchRating = (float)k / (d * 1.2f);
     double n = p->getNoMatches();
@@ -318,4 +322,222 @@ Match::Match(const Match &obj) {
     this->Team2 = obj.Team2;
     this->results = new char[strlen(obj.results) + 1];
     strcpy(this->results, obj.results);
+}
+
+class Menu {
+    private:
+        Team* teams[100];
+        Event* events[50];
+        int teamCount;
+        int eventCount;
+        void showHeader();
+        void addTeam();
+        void registerMatch();
+        void showPlayerStats();
+        void manageEvent();
+        void showAllData();
+
+    public:
+        Menu();
+        ~Menu();
+        void run();
+};
+
+Menu::Menu() : teamCount(0), eventCount(0) {
+    for(int i=0; i<100; i++) teams[i] = NULL;
+    for(int i=0; i<50; i++) events[i] = NULL;
+}
+
+void Menu::showHeader() {
+    cout << "\n==================================== HLTV CS2 TRACKER ====================================\n";
+    cout << "1.  [CONFIG] Adauga o Echipa (si Jucatorii acesteia)\n";
+    cout << "2.  [MATCH]  Inregistreaza un Meci Nou (Scor, Statistici)\n";
+    cout << "3.  [STATS]  Afiseaza Clasament Jucatori (dupa Rating)\n";
+    cout << "4.  [EVENT]  Adauga un eveniment si afiseaza echipele care pot juca (prag de puncte)\n";
+    cout << "5.  [DATA]   Afiseaza toate Echipele si Jucatorii\n";
+    cout << "0.  [EXIT]   Iesire din aplicatie\n";
+    cout << "========================================================================================\n";
+}
+
+void Menu::run() {
+    int option = -1;
+    while (option != 0) {
+        showHeader();
+        cout << "Alegeti o optiune: ";
+        cin >> option;
+        cin.ignore();
+
+        switch (option) {
+            case 1: addTeam(); break;
+            case 2: registerMatch(); break;
+            case 3: showPlayerStats(); break;
+            case 4: manageEvent(); break;
+            case 5: showAllData(); break;
+            case 0: cout << "Iesire program...\n"; break;
+            default: cout << "Optiune invalida!\n"; break;
+        }
+
+        if (option != 0) {
+            cout << "\nApasati ENTER pentru a reveni la meniul principal...";
+            cin.get();
+        }
+    }
+}
+
+void Menu::addTeam() {
+    if (teamCount >= 100) {
+        cout << "Capacitate maxima de echipe atinsa!\n";
+        return;
+    }
+
+    char tName[100];
+    cout << "Numele echipei: ";
+    cin.get(tName, 100); cin.ignore();
+
+    Player* p[5];
+    for (int i = 0; i < 5; i++) {
+        char pName[100];
+        int age;
+        float rating;
+        double matches;
+        cout << "\n--- Jucatorul " << i + 1 << " ---\n";
+        cout << "Nume: "; 
+        cin.get(pName, 100); 
+        cin.ignore();
+        cout << "Varsta: "; 
+        cin >> age;
+        cout << "Rating initial: "; 
+        cin >> rating;
+        cout << "Meciuri jucate: "; 
+        cin >> matches; 
+        cin.ignore();
+        p[i] = new Player(pName, age, rating, matches);
+    }
+
+    int initialPoints;
+    cout << "\nPuncte initiale echipa: ";
+    cin >> initialPoints; cin.ignore();
+    teams[teamCount] = new Team(tName, p[0], p[1], p[2], p[3], p[4], initialPoints);
+    teamCount++;
+
+    cout << "\nEchipa " << tName << " a fost adaugata cu succes!\n";
+}
+
+void Menu::registerMatch() {
+    if (teamCount < 2) {
+        cout << "Aveti nevoie de cel putin 2 echipe pentru un meci!\n";
+        return;
+    }
+    for (int i = 0; i < teamCount; i++) {
+        cout << i << ". " << teams[i]->getName() << endl;
+    }
+    int idx1, idx2;
+    cout << "Alegeti indexul primei echipe: "; cin >> idx1;
+    cout << "Alegeti indexul echipei adverse: "; cin >> idx2;
+    cin.ignore();
+    if (idx1 == idx2 || idx1 >= teamCount || idx2 >= teamCount) {
+        cout << "Selectie invalida!\n";
+        return;
+    }
+    char scor[10], kd[10][20];
+    cout << "Introduceti scorul (format 16-10): "; cin >> scor; cin.ignore();
+    cout << "Introduceti statisticile K/D (format K/D):\n";
+    for (int i = 0; i < 10; i++) {
+        if (i < 5) cout << "Echipa 1 - Jucator " << i+1 << ": ";
+        else cout << "Echipa 2 - Jucator " << (i-5)+1 << ": ";
+        cin >> kd[i]; cin.ignore();
+    }
+    Match m(teams[idx1], teams[idx2], scor, 
+            kd[0], kd[1], kd[2], kd[3], kd[4], 
+            kd[5], kd[6], kd[7], kd[8], kd[9]);
+
+    cout << "\nMeci inregistrat! Clasamentul si rating-urile au fost actualizate.\n";
+}
+
+void Menu::showAllData() {
+    if (teamCount == 0) {
+        cout << "Nu exista echipe inregistrate.\n";
+        return;
+    }
+
+    for (int i = 0; i < teamCount; i++) {
+        cout << "\nECHIPA: " << teams[i]->getName() << " | Puncte: " << teams[i]->getPoints();
+        cout << " | Calificat: " << (teams[i]->getCalif() ? "DA" : "NU") << endl;
+        Player* pTemp[5] = { teams[i]->getP1(), teams[i]->getP2(), teams[i]->getP3(), teams[i]->getP4(), teams[i]->getP5() };
+        for (int j = 0; j < 5; j++) {
+            cout << "  -> " << pTemp[j]->getName() << " | Rating: " << pTemp[j]->getRating() 
+                 << " | Meciuri: " << pTemp[j]->getNoMatches() << endl;
+        }
+    }
+}
+
+void Menu::manageEvent() {
+    char eName[100];
+    int reqPts;
+    
+    cout << "Nume eveniment: "; cin.getline(eName, 100);
+    cout << "Prag puncte calificare: "; cin >> reqPts; cin.ignore();
+
+    Event currentEvent(eName, reqPts);
+    cout << "\n--- Echipe calificate pentru " << currentEvent.getName() << " ---\n";
+    
+    bool found = false;
+    for (int i = 0; i < teamCount; i++) {
+        if (teams[i]->checkQualification(currentEvent)) {
+            cout << "- " << teams[i]->getName() << " (" << teams[i]->getPoints() << " puncte)\n";
+            found = true;
+        }
+    }
+    if (!found) cout << "Nicio echipa nu indeplineste pragul de " << reqPts << " puncte.\n";
+}
+
+void Menu::showPlayerStats() {
+    if (teamCount == 0) {
+        cout << "Nu exista jucatori inregistrati.\n";
+        return;
+    } 
+    cout << "\n[INFO] Total jucatori inregistrati in baza de date: " << Player::getTotalPlayers() << endl;
+    Player* toti_jucatorii[500];
+    int total_jucatori = 0;
+    for (int i = 0; i < teamCount; i++) {
+        toti_jucatorii[total_jucatori++] = teams[i]->getP1();
+        toti_jucatorii[total_jucatori++] = teams[i]->getP2();
+        toti_jucatorii[total_jucatori++] = teams[i]->getP3();
+        toti_jucatorii[total_jucatori++] = teams[i]->getP4();
+        toti_jucatorii[total_jucatori++] = teams[i]->getP5();
+    }
+    for (int i = 0; i < total_jucatori - 1; i++) {
+        for (int j = 0; j < total_jucatori - i - 1; j++) {
+            if (toti_jucatorii[j]->getRating() < toti_jucatorii[j + 1]->getRating()) {
+                Player* temp = toti_jucatorii[j];
+                toti_jucatorii[j] = toti_jucatorii[j + 1];
+                toti_jucatorii[j + 1] = temp;
+            }
+        }
+    }
+    cout << "\n================ CLASAMENT JUCATORI (TOP RATING) ================\n";
+    cout << "Pozitie | Nume Jucator         | Rating | Meciuri \n";
+    cout << "-----------------------------------------------------------------\n";
+    
+    for (int i = 0; i < total_jucatori; i++) {
+        printf("%-3d | %-20s | %-6.2f | %-7.0f\n", 
+               i + 1, 
+               toti_jucatorii[i]->getName(), 
+               toti_jucatorii[i]->getRating(), 
+               toti_jucatorii[i]->getNoMatches());
+    }
+    cout << "=================================================================\n";
+}
+
+Menu::~Menu() {
+    for(int i = 0; i < teamCount; i++) {
+        if(teams[i] != NULL) {
+            delete teams[i]->getP1();
+            delete teams[i]->getP2();
+            delete teams[i]->getP3();
+            delete teams[i]->getP4();
+            delete teams[i]->getP5();
+            delete teams[i];
+        }
+    }
 }
